@@ -145,6 +145,19 @@ void setup()
     Spark.variable("panicLevelWeb", &panicLevelWeb, INT);
     Spark.function("setPanicLevel", &readWebPanic);
     digitalWrite(onLed, HIGH);
+    
+    // implement scott's startup idea
+    onLight(lightGreen);
+    delay(2000);
+    onLight(lightYellow);
+    delay(2000);
+    onLight(lightRed);
+    delay(5000);
+    offLight(lightGreen);
+    delay(2000);
+    offLight(lightYellow);
+    delay(2000);
+    offLight(lightRed);
 }
 
 void loop()
