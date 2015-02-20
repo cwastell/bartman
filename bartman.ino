@@ -84,7 +84,7 @@ void setLight()
         case 4:
             onLight(lightGreen);
             blinkLight(lightYellow, blinkRate);
-            offLight(lightYellow);
+            offLight(lightRed);
             break;
         case 5:
             offLight(lightGreen);
