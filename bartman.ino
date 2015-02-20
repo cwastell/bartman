@@ -2,16 +2,19 @@
 #include "math.h"
 // Set the variables globally because #YOLO
 int potPin = A0;
-// led 1 to indicate power is on
-int onLed = D0;
-// led 2 to indicate web override
-int webLed = D1;
-// led 3 for future use
-int netLed = D2;
-int lightGreen = D3;
-int lightYellow = D4;
-int lightRed = D5;
-int totalPanicLevels = 8;
+// led 1 to indicate power is on (ard1)
+int onLed = TX;
+// led 2 to indicate web override (ard2)
+int webLed = D2;
+// led 3 for future use (ard 3)
+int netLed = D0;
+// Ard pin 5
+int lightGreen = D1;
+// Ard pin 6
+int lightYellow = A7;
+// Ard pin 7
+int lightRed = D4;
+int totalPanicLevels = 9;
 int panicLevel = 0;
 int panicLevelDial = 0;
 int panicLevelDialOld = 0;
@@ -21,21 +24,22 @@ float potFactor = 4000;
 int potLevel = 0;
 float potRate = 0;
 // rate in ms to blink the light when that's a thing
-int blinkRate = 5000;
-int blinkRatePanic = 2500;
+long blinkRate = 6000;
+long blinkRatePanic = 1000;
 
 // Get the level of the dial and return a panic level based on in the defined inputs
 int readPotDial()
 {
-    potLevel = analogRead(potPin);    
+    potLevel = analogRead(potPin);
     potRate = round((potLevel/potFactor) * totalPanicLevels);
     return potRate;
 }
 
 // web function for panic
-void readWebPanic(String webLevelString)
+int readWebPanic(String webLevelString)
 {
     int webLevel;
+    int validWebLevel = 0;
     webLevel = webLevelString.toInt();
     // check the web input to verify that it's in bounds
     if(webLevel >= 0)
@@ -44,11 +48,13 @@ void readWebPanic(String webLevelString)
         {
             webOverride = true;
             panicLevelWeb = webLevel;
+            validWebLevel = 1;
         }
     }
+    return validWebLevel;
 }
 
-// 
+//
 void setLight()
 {
     // switch statement
@@ -77,7 +83,7 @@ void setLight()
             break;
         case 4:
             onLight(lightGreen);
-            blinkLight(lightYellow);
+            blinkLight(lightYellow, blinkRate);
             offLight(lightYellow);
             break;
         case 5:
@@ -88,7 +94,7 @@ void setLight()
         case 6:
             offLight(lightGreen);
             onLight(lightYellow);
-            blinkLight(lightRed);
+            blinkLight(lightRed, blinkRate);
             break;
         case 7:
             offLight(lightGreen);
@@ -98,39 +104,32 @@ void setLight()
         case 8:
             offLight(lightGreen);
             offLight(lightYellow);
-            blinkLightPanic(lightRed);
+            blinkLight(lightRed, blinkRatePanic);
             break;
         default:
-            blinkLightPanic(lightGreen);
-            blinkLightPanic(lightYellow);
-            blinkLightPanic(lightRed);
+            blinkLight(lightGreen, blinkRatePanic);
+            blinkLight(lightYellow, blinkRatePanic);
+            blinkLight(lightRed, blinkRatePanic);
     }
 }
 
-void blinkLight(int lightToBlink)
+void blinkLight(int lightToBlink, int lightBlinkRate)
 {
-    digitalWrite(lightToBlink, HIGH);
-    delay(blinkRate);
     digitalWrite(lightToBlink, LOW);
-    delay(blinkRate);
+    delay(lightBlinkRate);
+    digitalWrite(lightToBlink, HIGH);
+    delay(lightBlinkRate);
 }
 
-void blinkLightPanic(int lightToBlink)
-{
-    digitalWrite(lightToBlink, HIGH);
-    delay(blinkRatePanic);
-    digitalWrite(lightToBlink, LOW);
-    delay(blinkRatePanic);
-}
 
 void onLight(int lightToOn)
 {
-    digitalWrite(lightToOn, HIGH);
+    digitalWrite(lightToOn, LOW);
 }
 
 void offLight(int lightToOff)
 {
-    digitalWrite(lightToOff, LOW);
+    digitalWrite(lightToOff, HIGH);
 }
 
 void setup()
@@ -144,7 +143,7 @@ void setup()
     Spark.variable("panicLevel", &panicLevel, INT);
     Spark.variable("potLevel", &potLevel, INT);
     Spark.variable("panicLevelWeb", &panicLevelWeb, INT);
-    Spark.function("setPanicLevel", readWebPanic);
+    Spark.function("setPanicLevel", &readWebPanic);
     digitalWrite(onLed, HIGH);
 }
 
@@ -159,18 +158,18 @@ void loop()
     {
         digitalWrite(netLed, LOW);
     }
-    
+
     // copy over the panic level to see if it changed
     panicLevelDialOld = panicLevelDial;
     panicLevelDial = readPotDial();
-    
+
     // if the panic level did change, override the webportion (when it's implmented obvs)
     if (panicLevelDialOld != panicLevelDial)
     {
         webOverride = false;
     }
-    
-    // if we're getting values from the web, use that input until the point where the dial changes. 
+
+    // if we're getting values from the web, use that input until the point where the dial changes.
     if (webOverride == true)
     {
         panicLevel = panicLevelWeb;
