@@ -24,8 +24,8 @@ float potFactor = 4000;
 int potLevel = 0;
 float potRate = 0;
 // rate in ms to blink the light when that's a thing
-long blinkRate = 6000;
-long blinkRatePanic = 1000;
+long blinkRate = 1500;
+long blinkRatePanic = 500;
 
 // Get the level of the dial and return a panic level based on in the defined inputs
 int readPotDial()
